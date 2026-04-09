@@ -1,0 +1,88 @@
+<html>
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="container">
+  <div class="card center">
+    <h2>Login</h2>
+
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+    <button onclick="location.href='signup.html'" style="background:#374151; margin-top:8px;">
+      Sign Up
+    </button>
+  </div>
+</div>
+
+<script>
+/* =========================
+   CREATE DEFAULT ACCOUNTS
+========================= */
+let users = JSON.parse(localStorage.getItem("users")) || [];
+
+if (users.length === 0) {
+  users = [
+    {
+      role: "admin",
+      personal: {
+        firstName: "Admin",
+        lastName: "User"
+      },
+      account: {
+        username: "admin",
+        password: "admin123"
+      }
+    },
+    {
+      role: "user",
+      personal: {
+        firstName: "John",
+        lastName: "Doe"
+      },
+      account: {
+        username: "user",
+        password: "user123"
+      }
+    }
+  ];
+
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
+function login() {
+  let username = document.getElementById("username").value.trim();
+  let password = document.getElementById("password").value;
+
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+
+  let foundUser = users.find(u =>
+    u.account.username === username &&
+    u.account.password === password
+  );
+
+  if (!foundUser) {
+    alert("Invalid username or password");
+    return;
+  }
+
+  // store session
+  localStorage.setItem("currentUser", JSON.stringify(foundUser));
+
+  // redirect based on role
+  if (foundUser.role === "admin") {
+    window.location.href = "admin.html";
+  } else {
+    window.location.href = "menu.html";
+  }
+}
+</script>
+
+</body>
+</html>
