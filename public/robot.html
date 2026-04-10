@@ -6,9 +6,44 @@
 <body>
 <div class="container">
   <h2>Pair Robot</h2>
-  <input type="text" placeholder="Robot ID">
-  <button>Pair</button>
+  <input type="text" id="serialNumber" placeholder="Robot ID or Serial Number">
+  <button onclick="pairRobot()">Pair</button>
   <button onclick="location.href='menu.html'">Back</button>
 </div>
+
+<script>
+async function pairRobot() {
+  const serialNumber = document.getElementById('serialNumber').value.trim();
+  if (!serialNumber) {
+    alert("Please enter a Robot ID / Serial Number.");
+    return;
+  }
+
+  let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser || !currentUser.UserID && currentUser.role !== 'admin') {
+    alert("Please log in to pair a robot.");
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/pair-robot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serialNumber, userId: currentUser.UserID || null })
+    });
+    
+    if (response.ok) {
+      alert('Robot paired successfully!');
+      location.href = 'menu.html';
+    } else {
+      const data = await response.json();
+      alert('Error: ' + (data.error || 'Failed to pair robot.'));
+    }
+  } catch (err) {
+    console.error("Pairing error:", err);
+    alert('Failed to connect to the server.');
+  }
+}
+</script>
 </body>
 </html>

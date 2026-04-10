@@ -84,6 +84,17 @@ function initializeDatabase() {
         db.run(`INSERT OR IGNORE INTO Admin (AdminID, Name, Email, Role) 
                 VALUES (1, 'Admin User', 'admin@robotcare.com', 'SuperAdmin')`);
         
+        // Pre-populate some users for demonstration
+        db.run(`INSERT OR IGNORE INTO User (UserID, Role, FirstName, LastName, DOB, Phone, Email, Username, Password) 
+                VALUES (1, 'user', 'John', 'Doe', '1950-05-14', '555-0101', 'john.doe@example.com', 'johndoe', 'password123'),
+                       (2, 'user', 'Jane', 'Smith', '1945-09-22', '555-0102', 'jane.smith@example.com', 'janesmith', 'password123')`);
+        
+        // Pre-populate some robots
+        db.run(`INSERT OR IGNORE INTO Robot (RobotID, Model, SerialNumber, CurrentVersion, OwnerID)
+                VALUES ('RBT-1001', 'CompanionBot Mk I', 'SN-991001', '1.0.0', 1),
+                       ('RBT-1002', 'CompanionBot Mk I', 'SN-991002', '1.0.0', 2),
+                       ('RBT-1003', 'CompanionBot Mk II', 'SN-991003', '2.0.0', NULL)`);
+        
         console.log('Database tables verified/created successfully.');
     });
 }
@@ -176,6 +187,46 @@ app.put('/api/admin/users/:id', (req, res) => {
     db.run(query, values, function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'User updated successfully' });
+    });
+});
+
+// --- ADMIN: GET ALL ROBOTS ---
+app.get('/api/admin/robots', (req, res) => {
+    const query = `SELECT * FROM Robot`;
+    db.all(query, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// --- ADMIN: UPDATE ROBOT SOFTWARE ---
+app.put('/api/admin/robots/:id/update', (req, res) => {
+    const robotId = req.params.id;
+    const { newVersion } = req.body;
+    const query = `UPDATE Robot SET CurrentVersion = ? WHERE RobotID = ?`;
+    db.run(query, [newVersion, robotId], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Software updated successfully' });
+    });
+});
+
+// --- PAIR ROBOT ---
+app.post('/api/pair-robot', (req, res) => {
+    const { serialNumber, userId } = req.body;
+    
+    // First, try to update an existing robot with this SerialNumber
+    const updateQuery = `UPDATE Robot SET OwnerID = ? WHERE SerialNumber = ? OR RobotID = ?`;
+    db.run(updateQuery, [userId, serialNumber, serialNumber], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes > 0) return res.json({ message: 'Existing robot paired successfully.' });
+        
+        // If no robot was updated, insert a new one
+        const robotId = 'RBT-' + Math.floor(Math.random() * 100000);
+        const insertQuery = `INSERT INTO Robot (RobotID, Model, SerialNumber, CurrentVersion, OwnerID) VALUES (?, 'Custom Paired Model', ?, '1.0.0', ?)`;
+        db.run(insertQuery, [robotId, serialNumber, userId], function(insertErr) {
+            if (insertErr) return res.status(500).json({ error: insertErr.message });
+            res.status(201).json({ message: 'New robot paired successfully.' });
+        });
     });
 });
 

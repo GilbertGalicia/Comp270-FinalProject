@@ -108,6 +108,27 @@
     </div>
   </div>
 
+  <!-- ================= ROBOTS ================= -->
+  <div class="section">
+    <h2>Robot Management</h2>
+    <button class="edit-btn" onclick="window.location.href='update-software.html'">Software Updates</button>
+    
+    <div style="margin-top:20px; overflow-x:auto;">
+      <table>
+        <thead>
+          <tr style="color:#9ca3af;">
+            <th>Robot ID</th>
+            <th>Model</th>
+            <th>Serial Number</th>
+            <th>Current Version</th>
+            <th>Owner ID</th>
+          </tr>
+        </thead>
+        <tbody id="robotTable"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ================= SYSTEM ================= -->
   <div class="section">
     <h2>System Actions</h2>
@@ -331,6 +352,32 @@ function renderIncidents() {
 }
 
 /* =========================
+   ROBOTS
+========================= */
+async function loadRobots() {
+  try {
+    const response = await fetch('/api/admin/robots');
+    const robots = await response.json();
+    let table = document.getElementById("robotTable");
+    
+    table.innerHTML = "";
+    robots.forEach(r => {
+      table.innerHTML += `
+        <tr>
+          <td>${r.RobotID}</td>
+          <td>${r.Model || 'N/A'}</td>
+          <td>${r.SerialNumber || 'N/A'}</td>
+          <td>${r.CurrentVersion || 'N/A'}</td>
+          <td>${r.OwnerID || 'Unpaired'}</td>
+        </tr>
+      `;
+    });
+  } catch (error) {
+    console.error("Failed to load robots:", error);
+  }
+}
+
+/* =========================
    SYSTEM
 ========================= */
 function resetSystem() {
@@ -352,6 +399,7 @@ function logout() {
 ========================= */
 loadUsers();
 generateIncidents();
+loadRobots();
 </script>
 
 </body>

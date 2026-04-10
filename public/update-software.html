@@ -1,0 +1,80 @@
+<html>
+<head>
+  <title>Software Update</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .robot-card { background:#0b0d10; padding:15px; border-radius:10px; margin-bottom:10px; border:1px solid #2b2f36; }
+    .update-btn { background:#10b981; color:white; padding:6px 12px; border-radius:6px; border:none; cursor:pointer; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h2>ROBOT SOFTWARE UPDATES</h2>
+    <div id="robotUpdateList"></div>
+    <button onclick="location.href='admin.html'" style="background:#374151; margin-top:20px;">Back to Admin Dashboard</button>
+  </div>
+</div>
+
+<script>
+// Ensure user is admin
+let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+if (!currentUser || currentUser.role !== "admin") {
+  window.location.href = "index.html";
+}
+
+async function loadRobotsForUpdate() {
+  try {
+    const response = await fetch('/api/admin/robots');
+    const robots = await response.json();
+    let container = document.getElementById("robotUpdateList");
+    container.innerHTML = "";
+    
+    if (robots.length === 0) {
+      container.innerHTML = "<p>No robots found in database.</p>";
+      return;
+    }
+
+    robots.forEach(r => {
+      container.innerHTML += `
+        <div class="robot-card">
+          <p><b>Robot ID:</b> ${r.RobotID} &nbsp; | &nbsp; <b>Serial:</b> ${r.SerialNumber}</p>
+          <p><b>Current Version:</b> <span style="color:#60a5fa">${r.CurrentVersion || '1.0.0'}</span></p>
+          <input type="text" id="newVer-${r.RobotID}" placeholder="New version (e.g. 2.0.1)" style="width:220px; display:inline-block; margin-right:10px;">
+          <button class="update-btn" onclick="pushUpdate('${r.RobotID}')">Push Update</button>
+        </div>
+      `;
+    });
+  } catch (error) {
+    console.error("Failed to load robots:", error);
+  }
+}
+
+async function pushUpdate(robotId) {
+  const newVersion = document.getElementById(`newVer-${robotId}`).value.trim();
+  if (!newVersion) return alert("Please enter a new version number.");
+  
+  try {
+    const response = await fetch(`/api/admin/robots/${robotId}/update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newVersion })
+    });
+    
+    if (response.ok) {
+      alert('Software update pushed successfully to ' + robotId);
+      loadRobotsForUpdate();
+    } else {
+      const data = await response.json();
+      alert('Error: ' + data.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Failed to connect to the server.');
+  }
+}
+
+loadRobotsForUpdate();
+</script>
+</body>
+</html>
