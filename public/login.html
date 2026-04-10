@@ -1,0 +1,66 @@
+<html>
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .form-title { color:#3b82f6; font-size:12px; margin:15px 0 5px; letter-spacing:1px; }
+    .login-card { max-width:400px; margin:auto; margin-top: 50px; text-align: center; }
+    .login-card input { border:1px solid #4b5563; background:#111318; width: 100%; margin-bottom: 15px; padding: 10px; color: white; box-sizing: border-box;}
+    .login-btn { width:160px; margin:20px auto 0; display:block; border-radius:20px; padding: 10px; cursor: pointer; }
+    #success-message { color: #10b981; display: none; margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="card login-card">
+    <h2>Login</h2>
+
+    <div class="form-title">ACCOUNT CREDENTIALS</div>
+    <input id="username" placeholder="Username" type="text">
+    <input id="password" type="password" placeholder="Password">
+
+    <button class="login-btn" onclick="login()">Log In</button>
+
+    <div id="success-message">Login successful! Redirecting...</div>
+  </div>
+
+</div>
+
+<script>
+async function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!username || !password) {
+    alert("Please enter both username and password.");
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      document.getElementById("success-message").style.display = "block";
+      setTimeout(() => {
+        window.location.href = data.role === 'admin' ? 'admin.html' : 'menu.html';
+      }, 1500); // Brief 1.5-second delay to show success message
+    } else {
+      alert("Invalid username or password.");
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("Failed to connect to the server.");
+  }
+}
+</script>
+
+</body>
+</html>
