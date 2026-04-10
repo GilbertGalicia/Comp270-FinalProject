@@ -2,7 +2,7 @@
 
 ## INSTRUCTIONS FOR RUNNING LOCALLY
 
-1. Clone this repo
+1. Clone this repo OR download this code as a .zip.
 2. Install Node.js from nodejs.org
 3. Open terminal/powershell in the repo folder and run: `npm init -y`
 4. Install required packages by running: `npm install express sqlite3 cors`
