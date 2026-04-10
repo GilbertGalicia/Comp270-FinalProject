@@ -1,0 +1,51 @@
+<html>
+<head><title>Create Contact</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<div class="container">
+  <div class="card">
+    <h3>CREATE CONTACT</h3>
+    <div class="grid">
+      <input id="name" placeholder="Name">
+      <input id="phone" placeholder="Phone">
+      <input id="email" placeholder="Email">
+      <input id="relation" placeholder="Relationship">
+    </div>
+    <button onclick="addContact()">Add Contact</button>
+  </div>
+  <button onclick="location.href='contacts.html'">Back</button>
+</div>
+
+<script>
+async function addContact() {
+  let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser || !currentUser.UserID) {
+    alert('Please log in first!');
+    return;
+  }
+
+  const contact = {
+    name: document.getElementById('name').value,
+    phone: document.getElementById('phone').value,
+    email: document.getElementById('email').value,
+    relationship: document.getElementById('relation').value,
+    userId: currentUser.UserID
+  };
+
+  try {
+    const response = await fetch('/api/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(contact)
+    });
+    if (response.ok) {
+      alert('Contact added');
+      location.href = 'manage-contacts.html';
+    }
+  } catch (err) {
+    console.error('Failed to save contact:', err);
+  }
+}
+
+</script>
+</body>
+</html>

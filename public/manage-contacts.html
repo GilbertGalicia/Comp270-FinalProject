@@ -1,0 +1,170 @@
+<html>
+<head>
+  <title>Manage Contacts</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .contact-item { display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #2d313a; }
+    .contact-info { text-align:left; }
+    .contact-name { font-weight:bold; }
+    .actions button { margin-left:5px; }
+
+    #editModal {
+      display:none;
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.7);
+    }
+    .modal-content {
+      background:#1a1d24;
+      padding:20px;
+      border-radius:12px;
+      max-width:400px;
+      margin:100px auto;
+    }
+    .modal-content input {
+      width:100%;
+      margin:6px 0;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #2d313a;
+      background:#0f1115;
+      color:white;
+    }
+     #editModal {
+      display:none;
+      position:fixed;
+      top:0; left:0;
+      width:100vw; height:100vh;
+      background:rgba(0,0,0,0.7);
+      z-index:1000;
+    }
+    .modal-content {
+      position:relative;
+      top:50%;
+      transform:translateY(-50%);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="card">
+    <h3>EMERGENCY CONTACTS</h3>
+    <div id="contactList"></div>
+  </div>
+
+  <button onclick="location.href='contacts.html'">Back</button>
+
+</div>
+
+<!-- MODAL -->
+<div id="editModal">
+  <div class="modal-content">
+    <h3>Edit Contact</h3>
+    <label>Name</label>
+    <input id="editName" placeholder="Name">
+    <label>Phone</label>
+    <input id="editPhone" placeholder="Phone">
+    <label>Email</label>
+    <input id="editEmail" placeholder="Email">
+    <label>Relationship</label>
+    <input id="editRelation" placeholder="Relationship">
+    <button onclick="saveEdit()">Save</button>
+    <button onclick="closeModal()" style="background:#374151;">Cancel</button>
+  </div>
+</div>
+
+<script>
+let allContacts = [];
+let editContactId = null;
+
+async function loadContacts() {
+  const list = document.getElementById('contactList');
+  list.innerHTML = '';
+
+  let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser || !currentUser.UserID) {
+    list.innerHTML = '<div>Please log in to manage contacts.</div>';
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/contacts?userId=${currentUser.UserID}`);
+    allContacts = await response.json();
+
+    allContacts.forEach((c, index) => {
+      const div = document.createElement('div');
+      div.className = 'contact-item';
+
+      div.innerHTML = `
+        <div class="contact-info">
+          <div class="contact-name">${c.Name}</div>
+          <div><strong>Phone:</strong> ${c.PhoneNumber}</div>
+          <div><strong>Email:</strong> ${c.Email || 'N/A'}</div>
+          <div><strong>Relationship:</strong> ${c.Relationship || 'N/A'}</div>
+        </div>
+        <div class="actions">
+          <button onclick="openEdit(${index})">Edit</button>
+          <button onclick="deleteContact(${c.ContactID})">Delete</button>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  } catch (err) {
+    console.error('Failed to load contacts:', err);
+  }
+}
+
+async function deleteContact(id) {
+  if (!confirm("Are you sure you want to delete this contact?")) return;
+  try {
+    await fetch(`/api/contacts/${id}`, { method: 'DELETE' });
+    loadContacts();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function openEdit(index) {
+  const c = allContacts[index];
+  editContactId = c.ContactID;
+
+  document.getElementById('editName').value = c.Name;
+  document.getElementById('editPhone').value = c.PhoneNumber;
+  document.getElementById('editEmail').value = c.Email || '';
+  document.getElementById('editRelation').value = c.Relationship || '';
+
+  document.getElementById('editModal').style.display = 'block';
+}
+
+async function saveEdit() {
+  const updatedData = {
+    name: document.getElementById('editName').value,
+    phone: document.getElementById('editPhone').value,
+    email: document.getElementById('editEmail').value,
+    relationship: document.getElementById('editRelation').value
+  };
+
+  try {
+    await fetch(`/api/contacts/${editContactId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedData)
+    });
+    closeModal();
+    loadContacts();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function closeModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+
+loadContacts();
+</script>
+
+</body>
+</html>

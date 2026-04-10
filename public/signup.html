@@ -1,0 +1,108 @@
+<html>
+<head>
+  <title>Sign Up</title>
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .form-title { color:#3b82f6; font-size:12px; margin:15px 0 5px; letter-spacing:1px; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .full { grid-column: span 2; }
+    .signup-card { max-width:500px; margin:auto; }
+    .signup-card input { border:1px solid #4b5563; background:#111318; }
+    .create-btn { width:160px; margin:20px auto 0; display:block; border-radius:20px; }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="card signup-card">
+    <h2 class="center">User Account Setup</h2>
+
+    <div class="form-title">PERSONAL INFORMATION</div>
+    <div class="grid-2">
+      <input id="firstName" placeholder="First Name">
+      <input id="lastName" placeholder="Last Name">
+      <input id="dob" type="date">
+      <input id="phone" placeholder="Phone Number">
+      <input id="email" placeholder="Email Address" class="full">
+    </div>
+
+    <div class="form-title">ACCOUNT SETUP</div>
+    <div class="grid-2">
+      <input id="username" placeholder="Username">
+      <input id="password" type="password" placeholder="Password">
+    </div>
+
+    <div class="form-title">EMERGENCY CONTACT</div>
+    <div class="grid-2">
+      <input id="emName" placeholder="Contact Name">
+      <input id="emPhone" placeholder="Contact Phone Number">
+      <input id="emEmail" placeholder="Contact Email">
+      <input id="emRelation" placeholder="Contact Relationship">
+    </div>
+
+    <button class="create-btn" onclick="createAccount()">Create Account</button>
+
+  </div>
+
+</div>
+
+<script>
+async function createAccount() {
+  let username = document.getElementById("username").value.trim();
+  let password = document.getElementById("password").value;
+
+  // basic validation
+  if (!username || !password) {
+    alert("Username and password required");
+    return;
+  }
+
+  let newUser = {
+    role: "user",
+
+    personal: {
+      firstName: document.getElementById("firstName").value,
+      lastName: document.getElementById("lastName").value,
+      dob: document.getElementById("dob").value,
+      phone: document.getElementById("phone").value,
+      email: document.getElementById("email").value
+    },
+
+    account: {
+      username,
+      password
+    },
+
+    emergencyContact: {
+      name: document.getElementById("emName").value,
+      phone: document.getElementById("emPhone").value,
+      email: document.getElementById("emEmail").value,
+      relationship: document.getElementById("emRelation").value
+    }
+  };
+
+  try {
+    const response = await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newUser)
+    });
+
+    if (response.ok) {
+      alert("Account created successfully!");
+      window.location.href = "index.html";
+    } else {
+      const data = await response.json();
+      alert("Error: " + (data.error || "Could not create account."));
+    }
+  } catch (error) {
+    console.error("Signup error:", error);
+    alert("Failed to connect to the server.");
+  }
+}
+</script>
+
+</body>
+</html>
